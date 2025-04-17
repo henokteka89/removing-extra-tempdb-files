@@ -1,6 +1,6 @@
 PLEASE DON'T RUN THIS IN PRODUCTION UNLESS YOU TESTED IT WELL IN NON-PRODUCTION. MAKE SURE TO SUPPLY "NO" IN @ISPRODUCTION VARIABLE WHEN RUNNING IN NON-PROD.
 
-THIS MAY NOT ENTIRELY REMOVE ALL FILES. YOU MIGHT SEE "DBCC SHRINKFILE: Page 5:16280 could not be moved because it is a work table page." IN THIS CASE REFERE TO ERIN'S ARTICLE https://www.sqlskills.com/blogs/erin/remove-files-from-tempdb/
+THIS MAY NOT ENTIRELY REMOVE ALL FILES. YOU MIGHT SEE "DBCC SHRINKFILE: Page 5:16280 could not be moved because it is a work table page." IN THIS CASE, YOU CAN RESTART SQL SERVER AND TRY THE STEPS AGAIN. 
 
 --  Set the flag to indicate whether it's a production environment or not
 DECLARE @isProduction NVARCHAR(3) = 'YES';  -- Default to YES (production)
