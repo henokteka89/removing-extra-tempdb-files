@@ -1,0 +1,54 @@
+PLEASE DON'T RUN THIS IN PRODUCTION UNLESS YOU TESTED IT WELL IN NON-PRODUCTION. MAKE SURE TO SUPPLY "NO" IN @ISPRODUCTION VARIABLE WHEN RUNNING IN NON-PROD.
+
+THIS MAY NOT ENTIRELY REMOVE ALL FILES. YOU MIGHT SEE "DBCC SHRINKFILE: Page 5:16280 could not be moved because it is a work table page." IN THIS CASE REFERE TO ERIN'S ARTICLE https://www.sqlskills.com/blogs/erin/remove-files-from-tempdb/
+
+--  Set the flag to indicate whether it's a production environment or not
+DECLARE @isProduction NVARCHAR(3) = 'YES';  -- Default to YES (production)
+-- Change the value to 'NO' to run on non-production environment (this flag must be manually set!)
+
+-- Step 1: Check if the script is being run on a production server
+IF @isProduction = 'YES'
+BEGIN
+    RAISERROR('⚠️ This script should NOT be applied to a production server unless tested in non-production first. Please set @isProduction = ''NO'' before running on a non-production environment.', 20, 1) WITH LOG;
+    RETURN;
+END
+GO
+
+-- ✅ Proceed with the script if not production
+USE tempdb;
+GO
+
+-- Step 2: Clear caches to make sure files can be emptied
+DBCC DROPCLEANBUFFERS;
+DBCC FREEPROCCACHE;
+DBCC FREESESSIONCACHE;
+DBCC FREESYSTEMCACHE ('ALL');
+GO
+
+-- Step 3: Loop over all tempdb files except 'tempdev' and 'templog'
+DECLARE @name SYSNAME;
+DECLARE @sql NVARCHAR(MAX);
+
+DECLARE file_cursor CURSOR FOR
+SELECT name
+FROM sys.database_files
+WHERE name NOT IN ('tempdev', 'templog');  -- Keep main data and log files
+
+OPEN file_cursor;
+
+FETCH NEXT FROM file_cursor INTO @name;
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    SET @sql = '
+        PRINT ''Processing file: ' + @name + ''';
+        DBCC SHRINKFILE ([' + @name + '], EMPTYFILE);
+        ALTER DATABASE tempdb REMOVE FILE [' + @name + '];
+    ';
+    EXEC sp_executesql @sql;
+
+    FETCH NEXT FROM file_cursor INTO @name;
+END
+
+CLOSE file_cursor;
+DEALLOCATE file_cursor;
