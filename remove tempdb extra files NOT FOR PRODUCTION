@@ -55,11 +55,11 @@ CLOSE file_cursor;
 DEALLOCATE file_cursor;
 
 Print '
-If this process fails and there are any tempdb data files left
-1. Rerun the clear cache queries and try to remove again
-2. Try rebooting the server
-3. In extreme cases, follow Erin Stellato''s method that involve startup parameter
---Check if any file exists using
+If this query fails to remove the files or there are any tempdb data files left after running the above query. Please,
+1. Rerun the clear cache queries in step 2 and try to remove again
+2. Try rebooting the server and rerun the query
+3. In extreme cases, follow Erin Stellato''s method that involves startup parameter
+--Check if any tempdb file exists using
 SELECT name
 FROM tempdb.sys.database_files
 WHERE name NOT IN (''tempdev'', ''templog'');'
