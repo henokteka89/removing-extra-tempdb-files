@@ -9,7 +9,8 @@ DECLARE @isProduction NVARCHAR(3) = 'YES';  -- Default to YES (production)
 -- Step 1: Check if the script is being run on a production server
 IF @isProduction = 'YES'
 BEGIN
-    RAISERROR('⚠️ This script should NOT be applied to a production server unless tested in non-production first. Please set @isProduction = ''NO'' before running on a non-production environment.', 20, 1) WITH LOG;
+    RAISERROR('This script should NOT be applied to a production server unless tested in non-production first. 
+    Please set @isProduction = ''NO'' before running on a non-production environment.', 20, 1) WITH LOG;
     RETURN;
 END
 GO
@@ -19,10 +20,10 @@ USE tempdb;
 GO
 
 -- Step 2: Clear caches to make sure files can be emptied
-DBCC DROPCLEANBUFFERS;
-DBCC FREEPROCCACHE;
-DBCC FREESESSIONCACHE;
-DBCC FREESYSTEMCACHE ('ALL');
+--DBCC DROPCLEANBUFFERS;
+--DBCC FREEPROCCACHE;
+--DBCC FREESESSIONCACHE;
+--DBCC FREESYSTEMCACHE ('ALL');
 GO
 
 -- Step 3: Loop over all tempdb files except 'tempdev' and 'templog'
@@ -31,7 +32,7 @@ DECLARE @sql NVARCHAR(MAX);
 
 DECLARE file_cursor CURSOR FOR
 SELECT name
-FROM sys.database_files
+FROM tempdb.sys.database_files
 WHERE name NOT IN ('tempdev', 'templog');  -- Keep main data and log files
 
 OPEN file_cursor;
@@ -52,3 +53,13 @@ END
 
 CLOSE file_cursor;
 DEALLOCATE file_cursor;
+
+Print '
+If this process fails and there are any tempdb data files left
+1. Rerun the clear cache queries and try to remove again
+2. Try rebooting the server
+3. In extreme cases, follow Erin Stellato''s method that involve startup parameter
+--Check if any file exists using
+SELECT name
+FROM tempdb.sys.database_files
+WHERE name NOT IN (''tempdev'', ''templog'');'
